@@ -86,6 +86,7 @@ type Conn struct {
 	recvTimeout    time.Duration
 	connectTimeout time.Duration
 	maxBufferSize  int
+	allowReadOnly  bool
 
 	creds   []authCreds
 	credsMu sync.Mutex // protects server
@@ -254,6 +255,13 @@ func WithLogger(logger Logger) connOption {
 func WithLogInfo(logInfo bool) connOption {
 	return func(c *Conn) {
 		c.logInfo = logInfo
+	}
+}
+
+// Returns a connection option allowing the session to become read-only..
+func AllowReadOnly(b bool) connOption {
+	return func(c *Conn) {
+		c.allowReadOnly = b
 	}
 }
 
@@ -493,7 +501,7 @@ func (c *Conn) loop() {
 			c.conn.Close()
 		case err == nil:
 			if c.logInfo {
-				c.logger.Printf("Authenticated: id=%d, timeout=%d", c.SessionID(), c.sessionTimeoutMs)
+				c.logger.Printf("Authenticated: id=0x%X, timeout=%d", c.SessionID(), c.sessionTimeoutMs)
 			}
 			c.hostProvider.Connected()        // mark success
 			c.closeChan = make(chan struct{}) // channel to tell send loop stop
@@ -690,6 +698,7 @@ func (c *Conn) authenticate() error {
 		TimeOut:         c.sessionTimeoutMs,
 		SessionID:       c.SessionID(),
 		Passwd:          c.passwd,
+		ReadOnly:        c.allowReadOnly,
 	})
 	if err != nil {
 		return err
@@ -738,7 +747,13 @@ func (c *Conn) authenticate() error {
 	atomic.StoreInt64(&c.sessionID, r.SessionID)
 	c.setTimeouts(r.TimeOut)
 	c.passwd = r.Passwd
-	c.setState(StateHasSession)
+	if r.ReadOnly {
+		c.setState(StateConnectedReadOnly)
+	} else {
+		// FIXME(msolo) This doesn't make much sense and has no analog in
+		// any other client (Java, C)
+		c.setState(StateHasSession)
+	}
 
 	return nil
 }
