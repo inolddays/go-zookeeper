@@ -537,7 +537,7 @@ func (c *Conn) loop() {
 			c.conn.Close()
 		case err == nil:
 			if c.logInfo {
-				c.logger.Printf("Authenticated: id=0x%x, timeout=%d", c.SessionID(), c.sessionTimeoutMs)
+				c.logger.Printf("Authenticated: id=0x%x, timeout=%v", c.SessionID(), c.SessionTimeout())
 			}
 			c.hostProvider.Connected()        // mark success
 			c.closeChan = make(chan struct{}) // channel to tell send loop stop
@@ -847,7 +847,7 @@ func (c *Conn) sendData(req *request) error {
 func (c *Conn) sendLoop() error {
 	pingTicker := time.NewTicker(c.pingInterval)
 	defer pingTicker.Stop()
-
+	// TODO(msolo) a regular send should take the place of ping.
 	for {
 		select {
 		case req, ok := <-c.sendChan:
