@@ -537,7 +537,7 @@ func (c *Conn) loop() {
 			c.conn.Close()
 		case err == nil:
 			if c.logInfo {
-				c.logger.Printf("Authenticated: id=0x%x, timeout=%v", c.SessionID(), c.SessionTimeout())
+				c.logger.Printf("Authenticated: id=0x%x, timeout=%v", c.SessionID(), c.sessionTimeoutMs)
 			}
 			c.hostProvider.Connected()        // mark success
 			c.closeChan = make(chan struct{}) // channel to tell send loop stop
