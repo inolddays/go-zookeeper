@@ -455,7 +455,7 @@ func (c *Conn) connect() error {
 	}
 }
 
-func (c *Conn) resendZkAuth(reauthReadyChan chan struct{}) {
+func (c *Conn) resendZkAuth() error {
 	shouldCancel := func() bool {
 		select {
 		case <-c.shouldQuit:
@@ -470,8 +470,6 @@ func (c *Conn) resendZkAuth(reauthReadyChan chan struct{}) {
 	c.credsMu.Lock()
 	defer c.credsMu.Unlock()
 
-	defer close(reauthReadyChan)
-
 	if len(c.creds) > 0 && c.logInfo {
 		c.logger.Printf("Re-submitting %d credentials id=0x%x after reconnect",
 			c.SessionID(), len(c.creds))
@@ -480,7 +478,7 @@ func (c *Conn) resendZkAuth(reauthReadyChan chan struct{}) {
 	for _, cred := range c.creds {
 		if shouldCancel() {
 			c.logger.Printf("Cancel re-submitting credentials")
-			return
+			return ErrConnectionClosed
 		}
 		resChan, err := c.sendRequest(
 			opSetAuth,
@@ -493,8 +491,7 @@ func (c *Conn) resendZkAuth(reauthReadyChan chan struct{}) {
 
 		if err != nil {
 			c.logger.Printf("Call to sendRequest failed during credential resubmit: %s", err)
-			// FIXME(prozlach): lets ignore errors for now
-			continue
+			return err
 		}
 
 		var res response
@@ -502,17 +499,18 @@ func (c *Conn) resendZkAuth(reauthReadyChan chan struct{}) {
 		case res = <-resChan:
 		case <-c.closeChan:
 			c.logger.Printf("Recv closed, cancel re-submitting credentials")
-			return
+			return ErrConnectionClosed
 		case <-c.shouldQuit:
 			c.logger.Printf("Should quit, cancel re-submitting credentials")
-			return
+			return ErrConnectionClosed
 		}
 		if res.err != nil {
 			c.logger.Printf("Credential re-submit failed: %s", res.err)
-			// FIXME(prozlach): lets ignore errors for now
-			continue
+			return res.err
 		}
 	}
+
+	return nil
 }
 
 func (c *Conn) sendRequest(
@@ -561,18 +559,20 @@ func (c *Conn) loop() {
 			}
 			c.hostProvider.Connected()        // mark success
 			c.closeChan = make(chan struct{}) // channel to tell send loop stop
-			reauthChan := make(chan struct{}) // channel to tell send loop that authdata has been resubmitted
+			reauthChan := make(chan error)    // channel to tell send loop that authdata has been resubmitted
 
 			var wg sync.WaitGroup
 			wg.Add(1)
 			go func() {
-				<-reauthChan
+				sendErr := <-reauthChan
 				if c.debugCloseRecvLoop {
 					close(c.debugReauthDone)
 				}
-				err := c.sendLoop()
+				if sendErr == nil {
+					sendErr = c.sendLoop()
+				}
 				if err != nil || c.logInfo {
-					c.logger.Printf("Send loop id=0x%x terminated: err=%v", c.SessionID(), err)
+					c.logger.Printf("Send loop id=0x%x terminated: err=%v", c.SessionID(), sendErr)
 				}
 				c.conn.Close() // causes recv loop to EOF/exit
 				wg.Done()
@@ -596,7 +596,7 @@ func (c *Conn) loop() {
 				wg.Done()
 			}()
 
-			c.resendZkAuth(reauthChan)
+			reauthChan <- c.resendZkAuth()
 
 			c.sendSetWatches()
 			wg.Wait()
