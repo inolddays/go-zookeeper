@@ -133,8 +133,10 @@ var (
 	ErrEphemeralOnLocalSession = errors.New("zk: ephemeral on local session")
 	ErrNoWatcher               = errors.New("zk: no such watcher")
 	ErrUnimplemented           = errors.New("zk: unimplemented")
-
+	ErrReconfigDisabled        = errors.New("attempts to perform a reconfiguration operation when reconfiguration feature is disabled")
+	ErrBadArguments            = errors.New("invalid arguments")
 	// ErrInvalidCallback         = errors.New("zk: invalid callback specified")
+
 	errCodeToError = map[ErrCode]error{
 		0:                          nil,
 		errAPIError:                ErrAPIError,
@@ -155,6 +157,8 @@ var (
 		errEphemeralOnLocalSession: ErrEphemeralOnLocalSession,
 		errNotReadOnly:             ErrNotReadOnly,
 		errUnimplemented:           ErrUnimplemented,
+		errZReconfigDisabled:       ErrReconfigDisabled,
+		errBadArguments:            ErrBadArguments,
 	}
 )
 
@@ -195,6 +199,8 @@ const (
 	errNotReadOnly             ErrCode = -119
 	errEphemeralOnLocalSession ErrCode = -120
 	errNoWatcher               ErrCode = -121
+	// Attempts to perform a reconfiguration operation when reconfiguration feature is disabled
+	errZReconfigDisabled ErrCode = -123
 )
 
 // Constants for ACL permissions
@@ -224,6 +230,7 @@ var (
 		opGetChildren2: "getChildren2",
 		opCheck:        "check",
 		opMulti:        "multi",
+		opReconfig:     "reconfig",
 		opClose:        "close",
 		opSetAuth:      "setAuth",
 		opSetWatches:   "setWatches",
