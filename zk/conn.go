@@ -345,6 +345,7 @@ func (c *Conn) SetLogger(l Logger) {
 func (c *Conn) setTimeouts(sessionTimeoutMs int32) {
 	c.sessionTimeoutMs = sessionTimeoutMs
 	sessionTimeout := time.Duration(sessionTimeoutMs) * time.Millisecond
+	c.connectTimeout = sessionTimeout / time.Duration(c.hostProvider.Len())
 	c.recvTimeout = sessionTimeout * 2 / 3
 	c.pingInterval = c.recvTimeout / 2
 }
@@ -416,14 +417,14 @@ func (c *Conn) resendZkAuth(reauthReadyChan chan struct{}) {
 
 	defer close(reauthReadyChan)
 
-	if c.logInfo {
-		c.logger.Printf("Re-submitting `%d` credentials after reconnect",
-			len(c.creds))
+	if len(c.creds) > 0 && c.logInfo {
+		c.logger.Printf("Re-submitting %d credentials id=0x%x after reconnect",
+			c.SessionID(), len(c.creds))
 	}
 
 	for _, cred := range c.creds {
 		if shouldCancel() {
-			c.logger.Printf("Cancel rer-submitting credentials")
+			c.logger.Printf("Cancel re-submitting credentials")
 			return
 		}
 		resChan, err := c.sendRequest(
@@ -494,14 +495,14 @@ func (c *Conn) loop() {
 		err := c.authenticate()
 		switch {
 		case err == ErrSessionExpired:
-			c.logger.Printf("Authentication failed: %s", err)
+			c.logger.Printf("Authentication id=0x%x failed: %s", c.SessionID(), err)
 			c.invalidateWatches(err)
 		case err != nil && c.conn != nil:
-			c.logger.Printf("Authentication failed: %s", err)
+			c.logger.Printf("Authentication id=0x%x failed: %s", c.SessionID(), err)
 			c.conn.Close()
 		case err == nil:
 			if c.logInfo {
-				c.logger.Printf("Authenticated: id=0x%X, timeout=%d", c.SessionID(), c.sessionTimeoutMs)
+				c.logger.Printf("Authenticated: id=0x%x, timeout=%d", c.SessionID(), c.sessionTimeoutMs)
 			}
 			c.hostProvider.Connected()        // mark success
 			c.closeChan = make(chan struct{}) // channel to tell send loop stop
@@ -516,8 +517,8 @@ func (c *Conn) loop() {
 				}
 				err := c.sendLoop()
 				if err != nil || c.logInfo {
-					c.logger.Printf("Send loop terminated: err=%v", err)
-				}
+					c.logger.Printf("Send loop id=0x%x terminated: err=%v", c.SessionID(), err)
+                }
 				c.conn.Close() // causes recv loop to EOF/exit
 				wg.Done()
 			}()
@@ -531,7 +532,7 @@ func (c *Conn) loop() {
 					err = c.recvLoop(c.conn)
 				}
 				if err != io.EOF || c.logInfo {
-					c.logger.Printf("Recv loop terminated: err=%v", err)
+					c.logger.Printf("Recv loop id=0x%x terminated: err=%v", c.SessionID(), err)
 				}
 				if err == nil {
 					panic("zk: recvLoop should never return nil error")
@@ -556,6 +557,7 @@ func (c *Conn) loop() {
 		}
 
 		if err != ErrSessionExpired {
+			c.logger.Printf("Fake conn closed id=0x%x : err=%v", c.SessionID(), err)
 			err = ErrConnectionClosed
 		}
 		c.flushRequests(err)
