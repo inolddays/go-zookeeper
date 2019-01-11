@@ -82,6 +82,7 @@ type Conn struct {
 	eventChan      chan Event
 	eventCallback  EventCallback // may be nil
 	shouldQuit     chan struct{}
+	shouldQuitOnce sync.Once
 	closeMu        sync.Mutex // protects closeErr and closeWg
 	closeErr       error
 	closeWg        sync.WaitGroup // tracks pending attempts to write to sendChan
@@ -363,22 +364,24 @@ func (c *Conn) closeWithError(err error) {
 }
 
 func (c *Conn) Close() {
-	close(c.shouldQuit)
+	c.shouldQuitOnce.Do(func() {
+		close(c.shouldQuit)
 
-	respChan := make(chan response, 1)
+		respChan := make(chan response, 1)
 
-	// queueRequest is a blocking method, so call it concurrently.
-	go func() {
-		resp := <-c.queueRequest(opClose, &closeRequest{}, &closeResponse{}, nil)
-		respChan <- resp
-	}()
+		// queueRequest is a blocking method, so call it concurrently.
+		go func() {
+			resp := <-c.queueRequest(opClose, &closeRequest{}, &closeResponse{}, nil)
+			respChan <- resp
+		}()
 
-	select {
-	case <-respChan:
-	case <-time.After(time.Second):
-	}
+		select {
+		case <-respChan:
+		case <-time.After(time.Second):
+		}
 
-	c.closeWithError(ErrClosing)
+		c.closeWithError(ErrClosing)
+	})
 }
 
 // State returns the current state of the connection.
