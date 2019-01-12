@@ -431,6 +431,11 @@ func (c *Conn) sendEvent(evt Event) {
 	select {
 	case c.eventChan <- evt:
 	default:
+		// NOTE(msolo) It is assumed that the caller of Connect() either
+		// drains the event channel or is uninterested in session
+		// events. An undelivered session event it not an error since the
+		// internal state is still handled correctly.
+		//
 		// panic("zk: event channel full - it must be monitored and never allowed to be full")
 	}
 }
