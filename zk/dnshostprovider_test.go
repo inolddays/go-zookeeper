@@ -117,7 +117,10 @@ func TestDNSHostProviderReconnect(t *testing.T) {
 		t.Fatalf("Connect returned error: %+v", err)
 	}
 	defer zk.Close()
+	testDNSHostProviderReconnect(t, ts, zk)
+}
 
+func testDNSHostProviderReconnect(t *testing.T, ts *TestCluster, zk *Conn) {
 	path := "/gozk-test"
 
 	// Initial operation to force connection.
@@ -180,6 +183,10 @@ func TestDNSHostProviderRetryStart(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	testDNSHostProviderRetryStart(t, hp)
+}
+
+func testDNSHostProviderRetryStart(t *testing.T, hp HostProvider) {
 	testdata := []struct {
 		retryStartWant bool
 		callConnected  bool
