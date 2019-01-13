@@ -126,7 +126,7 @@ func TestCreate(t *testing.T) {
 }
 
 func TestOpsAfterCloseDontDeadlock(t *testing.T) {
-	ts, err := StartTestCluster(1, nil, logWriter{t: t, p: "[ZKERR] "})
+	ts, err := StartTestCluster(t, 1, nil, logWriter{t: t, p: "[ZKERR] "})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -856,7 +856,7 @@ func TestDisconnectOnSessionExpiration(t *testing.T) {
 	// This test case ensures that client doesn't reconnect on session expiration.
 	testNode := "/expiration-testnode"
 
-	ts, err := StartTestCluster(1, nil, logWriter{t: t, p: "[ZKERR] "})
+	ts, err := StartTestCluster(t, 1, nil, logWriter{t: t, p: "[ZKERR] "})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -923,7 +923,7 @@ func TestRequestFail(t *testing.T) {
 }
 
 func TestRequestFailAfterClosed(t *testing.T) {
-	ts, err := StartTestCluster(1, nil, logWriter{t: t, p: "[ZKERR] "})
+	ts, err := StartTestCluster(t, 1, nil, logWriter{t: t, p: "[ZKERR] "})
 	if err != nil {
 		t.Fatal(err)
 	}

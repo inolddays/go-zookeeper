@@ -34,6 +34,9 @@ build:
 
 .PHONY: test
 test: build
-	go test -timeout 500s -v -race -covermode atomic -coverprofile=profile.cov $(PACKAGES)
+	go test -timeout 500s -race -covermode atomic -coverprofile=profile.cov $(PACKAGES)
+
+.PHONY: coverage
+coverage: test profile.cov
 	# ignore if we fail to publish coverage
 	-goveralls -coverprofile=profile.cov -service=travis-ci
