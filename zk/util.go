@@ -5,9 +5,10 @@ import (
 	"encoding/base64"
 	"fmt"
 	"math/rand"
-	"time"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
 	"unicode/utf8"
 )
 
@@ -47,11 +48,22 @@ func FormatServers(servers []string) []string {
 	return servers
 }
 
+var zkRnd *rand.Rand
+var muZkRnd sync.Mutex
+
+func init() {
+	// Initialize one correct random source for internal use in this package.
+	muZkRnd.Lock()
+	zkRnd = rand.New(rand.NewSource(time.Now().UnixNano()))
+	muZkRnd.Unlock()
+}
+
 // stringShuffle performs a Fisher-Yates shuffle on a slice of strings
 func stringShuffle(s []string) {
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	for i := len(s) - 1; i > 0; i-- {
-		j := r.Intn(i + 1)
+		muZkRnd.Lock()
+		j := zkRnd.Intn(i + 1)
+		muZkRnd.Unlock()
 		s[i], s[j] = s[j], s[i]
 	}
 }
