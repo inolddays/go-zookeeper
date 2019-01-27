@@ -17,8 +17,27 @@ const (
 	_testMyIDFileName = "myid"
 )
 
-func init() {
-	rand.Seed(time.Now().UnixNano())
+func NewIntegrationTestServer(t *testing.T, configPath string, stdout, stderr io.Writer) (*server, error) {
+	// allow external systems to configure this zk server bin path.
+	zkPath := os.Getenv("ZOOKEEPER_BIN_PATH")
+	if zkPath == "" {
+		// default to a static reletive path that can be setup with a build system
+		zkPath = "../zookeeper/bin"
+	}
+	if _, err := os.Stat(zkPath); err != nil {
+		if os.IsNotExist(err) {
+			return nil, fmt.Errorf("zk: could not find testing zookeeper bin path at %q: %v ", zkPath, err)
+		}
+	}
+	// password is 'test'
+	superString := `SERVER_JVMFLAGS=-Dzookeeper.DigestAuthenticationProvider.superDigest=super:D/InIHSb7yEEbrWz8b9l71RjZJU=`
+
+	return &server{
+		cmdString: filepath.Join(zkPath, "zkServer.sh"),
+		cmdArgs:   []string{"start-foreground", configPath},
+		cmdEnv:    []string{superString},
+		stdout:    stdout, stderr: stderr,
+	}, nil
 }
 
 type TestServer struct {
