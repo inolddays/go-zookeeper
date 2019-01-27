@@ -209,14 +209,14 @@ func TestFLWCons(t *testing.T) {
 
 	for _, z := range clients {
 		if z.Error != nil {
-			t.Errorf("error seen: %v", err.Error())
+			t.Errorf("error seen: %v", z.Error)
 		}
 
 		for i, v := range z.Clients {
 			c := results[i]
 
 			if v.Error != nil {
-				t.Errorf("client error seen: %v", err.Error())
+				t.Errorf("client error seen: %v", v.Error)
 			}
 
 			if v.Queued != c.Queued {
