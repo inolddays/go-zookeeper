@@ -1,11 +1,13 @@
-Native Go Zookeeper Client Library
+# Native Go Zookeeper Client Library [![GoDoc](https://godoc.org/github.com/z-division/go-zookeeper?status.svg)](https://godoc.org/github.com/z-division/go-zookeeper/zk)
 ===================================
 
-[![GoDoc](https://godoc.org/github.com/samuel/go-zookeeper?status.svg)](https://godoc.org/github.com/samuel/go-zookeeper)
-[![Build Status](https://travis-ci.org/samuel/go-zookeeper.png)](https://travis-ci.org/samuel/go-zookeeper)
-[![Coverage Status](https://coveralls.io/repos/github/samuel/go-zookeeper/badge.svg?branch=master)](https://coveralls.io/github/samuel/go-zookeeper?branch=master)
+Package zk provides a native client for connecting to a Zookeeper quorum.
 
-License
--------
+This fork incoporates pull requests against the upstream, fixing some outstanding issues. It improves support for Zookeeper 3.5 while maintaining a backward-compatible API.
 
+A full list of incorporated pull requests is detailed on the [wiki](https://github.com/z-division/go-zookeeper/wiki).
+
+An [example using this client in a production environment](https://github.com/z-division/go-zookeeper/wiki/Example-Production-Usage)  is listed and annotated on the wiki.
+
+## License
 3-clause BSD. See LICENSE file.
