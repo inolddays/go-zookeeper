@@ -80,7 +80,7 @@ func (c *Conn) handleReconfig() {
 	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 	for {
 		// Don't stampede, reconfig is an optimization, not for correctness.
-		time.Sleep(time.Duration(rnd.Int63n(int64(c.sessionTimeoutMs) * 1e6)))
+		time.Sleep(time.Duration(rnd.Int63n(int64(c.sessionTimeout()))))
 		data, _, evtCh, err := c.GetW(DynConfPath)
 		if err == ErrClosing || err == ErrSessionExpired {
 			return

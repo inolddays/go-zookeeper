@@ -108,7 +108,7 @@ func TestNoQuorum(t *testing.T) {
 		t.Fatalf("Failed to connect and get session")
 	}
 	initialSessionID := zk.sessionID
-	DefaultLogger.Printf("    Session established: id=%d, timeout=%d", zk.sessionID, zk.sessionTimeoutMs)
+	DefaultLogger.Printf("    Session established: id=%d, timeout=%v", zk.sessionID, zk.sessionTimeout())
 
 	// Kill the ZooKeeper leader and wait for the session to reconnect.
 	DefaultLogger.Printf("    Kill the leader")

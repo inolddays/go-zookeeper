@@ -122,7 +122,6 @@ func TestCreate(t *testing.T) {
 	} else if len(data) < 4 {
 		t.Fatal("Get returned wrong size data")
 	}
-
 }
 
 func TestOpsAfterCloseDontDeadlock(t *testing.T) {
@@ -157,12 +156,12 @@ func TestOpsAfterCloseDontDeadlock(t *testing.T) {
 }
 
 func TestIncrementalReconfig(t *testing.T) {
-	if val, ok := os.LookupEnv("zk_version"); ok {
+	if val, ok := os.LookupEnv("ZK_VERSION"); ok {
 		if !strings.HasPrefix(val, "3.5") {
 			t.Skip("running with zookeeper that does not support this api")
 		}
 	} else {
-		t.Skip("did not detect zk_version from env. skipping reconfig test")
+		t.Skip("did not detect ZK_VERSION from env. skipping reconfig test")
 	}
 	ts, err := StartTestCluster(t, 3, nil, logWriter{t: t, p: "[ZKERR] "})
 	requireNoError(t, err, "failed to setup test cluster")
@@ -252,12 +251,12 @@ func TestIncrementalReconfig(t *testing.T) {
 }
 
 func TestReconfig(t *testing.T) {
-	if val, ok := os.LookupEnv("zk_version"); ok {
+	if val, ok := os.LookupEnv("ZK_VERSION"); ok {
 		if !strings.HasPrefix(val, "3.5") {
 			t.Skip("running with zookeeper that does not support this api")
 		}
 	} else {
-		t.Skip("did not detect zk_version from env. skipping reconfig test")
+		t.Skip("did not detect ZK_VERSION from env. skipping reconfig test")
 	}
 
 	// This test enures we can do an non-incremental reconfig
@@ -300,7 +299,6 @@ func TestReconfig(t *testing.T) {
 
 	_, err = zk.Reconfig(s, -1)
 	requireNoError(t, err, "failed to reconfig cluster")
-
 }
 
 func TestMulti(t *testing.T) {

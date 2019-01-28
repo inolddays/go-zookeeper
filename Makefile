@@ -11,9 +11,6 @@ PACKAGES := $(shell go list ./... | grep -v examples)
 $(ZK):
 	wget $(ZK_URL)
 	tar -zxf $(ZK).tar.gz
-	# we link to a standard directory path so then the tests dont need to find based on version
-	# in the test code. this allows backward compatable testing.
-	ln -s $(ZK) zookeeper
 
 .PHONY: install-covertools
 install-covertools:
@@ -22,6 +19,10 @@ install-covertools:
 
 .PHONY: setup
 setup: $(ZK) install-covertools
+	# we link to a standard directory path so then the tests dont need to find based on version
+	# in the test code. this allows backward compatable testing.
+	rm -f ./zookeeper
+	ln -s $(ZK) ./zookeeper
 
 .PHONY: lint
 lint:

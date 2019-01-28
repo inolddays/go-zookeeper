@@ -67,12 +67,12 @@ type authCreds struct {
 }
 
 type Conn struct {
-	unsafeLastZxid   int64 // use lastZxid()/setLastZxid() for read/write
-	sessionID        int64
-	state            State // must be 32-bit aligned
-	xid              uint32
-	sessionTimeoutMs int32 // session timeout in milliseconds
-	passwd           []byte
+	unsafeLastZxid         int64 // use lastZxid()/setLastZxid() for read/write
+	sessionID              int64
+	state                  State // must be 32-bit aligned
+	xid                    uint32
+	unsafeSessionTimeoutMs int32 // session timeout in milliseconds
+	passwd                 []byte
 
 	dialer         Dialer
 	hostProvider   HostProvider
@@ -404,6 +404,10 @@ func (c *Conn) setLastZxid(val int64) {
 	atomic.StoreInt64(&c.unsafeLastZxid, val)
 }
 
+func (c *Conn) sessionTimeout() time.Duration {
+	return time.Duration(atomic.LoadInt32(&c.unsafeSessionTimeoutMs)) * time.Millisecond
+}
+
 // SetLogger sets the logger to be used for printing errors.
 // Logger is an interface provided by this package.
 func (c *Conn) SetLogger(l Logger) {
@@ -411,7 +415,7 @@ func (c *Conn) SetLogger(l Logger) {
 }
 
 func (c *Conn) setTimeouts(sessionTimeoutMs int32) {
-	c.sessionTimeoutMs = sessionTimeoutMs
+	atomic.StoreInt32(&c.unsafeSessionTimeoutMs, sessionTimeoutMs)
 	sessionTimeout := time.Duration(sessionTimeoutMs) * time.Millisecond
 	c.connectTimeout = sessionTimeout / time.Duration(c.hostProvider.Len())
 	c.recvTimeout = sessionTimeout * 2 / 3
@@ -573,7 +577,7 @@ func (c *Conn) loop() {
 			c.conn.Close()
 		case err == nil:
 			if c.logInfo {
-				c.logger.Printf("authenticated: id=0x%x, timeout=%v", c.SessionID(), c.sessionTimeoutMs)
+				c.logger.Printf("authenticated: id=0x%x, timeout=%v", c.SessionID(), c.sessionTimeout())
 			}
 			c.hostProvider.Connected()        // mark success
 			c.closeChan = make(chan struct{}) // channel to tell send loop stop
@@ -775,7 +779,7 @@ func (c *Conn) authenticate() error {
 	n, err := encodePacket(buf[4:], &connectRequest{
 		ProtocolVersion: protocolVersion,
 		LastZxidSeen:    c.lastZxid(),
-		TimeOut:         c.sessionTimeoutMs,
+		TimeOut:         int32(c.sessionTimeout() / 1e6), // Packet is encoded in milliseconds.
 		SessionID:       c.SessionID(),
 		Passwd:          c.passwd,
 		ReadOnly:        c.allowReadOnly,
