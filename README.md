@@ -1,9 +1,8 @@
 # Native Go Zookeeper Client Library [![GoDoc](https://godoc.org/github.com/z-division/go-zookeeper?status.svg)](https://godoc.org/github.com/z-division/go-zookeeper/zk)
-===================================
 
-Package zk provides a native client for connecting to a Zookeeper quorum.
+Package `zk` provides a native client for connecting to a Zookeeper quorum.
 
-This fork incoporates pull requests against the upstream, fixing some outstanding issues. It improves support for Zookeeper 3.5 while maintaining a backward-compatible API.
+This fork incoporates pull requests against the upstream, fixing some key outstanding issues. It also improves support for Zookeeper 3.5 while maintaining a backward-compatible API.
 
 A full list of incorporated pull requests is detailed on the [wiki](https://github.com/z-division/go-zookeeper/wiki).
 
