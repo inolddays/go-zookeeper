@@ -6,6 +6,7 @@ import (
 	"log"
 	"reflect"
 	"runtime"
+	"strings"
 	"time"
 )
 
@@ -269,16 +270,19 @@ type multiRequestOp struct {
 	Header multiHeader
 	Op     interface{}
 }
+
 type multiRequest struct {
 	Ops        []multiRequestOp
 	DoneHeader multiHeader
 }
+
 type multiResponseOp struct {
 	Header multiHeader
 	String string
 	Stat   *Stat
 	Err    ErrCode
 }
+
 type multiResponse struct {
 	Ops        []multiResponseOp
 	DoneHeader multiHeader
@@ -415,7 +419,7 @@ type encoder interface {
 func decodePacket(buf []byte, st interface{}) (n int, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			if e, ok := r.(runtime.Error); ok && e.Error() == "runtime error: slice bounds out of range" {
+			if e, ok := r.(runtime.Error); ok && strings.HasPrefix(e.Error(), "runtime error: slice bounds out of range") {
 				err = ErrShortBuffer
 			} else {
 				panic(r)
@@ -506,7 +510,7 @@ func decodePacketValue(buf []byte, v reflect.Value) (int, error) {
 func encodePacket(buf []byte, st interface{}) (n int, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			if e, ok := r.(runtime.Error); ok && e.Error() == "runtime error: slice bounds out of range" {
+			if e, ok := r.(runtime.Error); ok && strings.HasPrefix(e.Error(), "runtime error: slice bounds out of range") {
 				err = ErrShortBuffer
 			} else {
 				panic(r)

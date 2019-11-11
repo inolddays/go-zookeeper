@@ -504,13 +504,13 @@ func (c *Conn) resendZkAuth() error {
 		}
 		resChan, err := c.sendRequest(
 			opSetAuth,
-			&setAuthRequest{Type: 0,
+			&setAuthRequest{
+				Type:   0,
 				Scheme: cred.scheme,
 				Auth:   cred.auth,
 			},
 			&setAuthResponse{},
 			nil)
-
 		if err != nil {
 			c.logger.Printf("call to sendRequest failed during credential resubmit: %s", err)
 			return err
@@ -1075,7 +1075,6 @@ func (c *Conn) request(opcode int32, req interface{}, res interface{}, recvFunc 
 
 func (c *Conn) AddAuth(scheme string, auth []byte) error {
 	_, err := c.request(opSetAuth, &setAuthRequest{Type: 0, Scheme: scheme, Auth: auth}, &setAuthResponse{}, nil)
-
 	if err != nil {
 		return err
 	}
@@ -1293,6 +1292,7 @@ func (c *Conn) GetACL(path string) ([]ACL, *Stat, error) {
 	_, err := c.request(opGetAcl, &getAclRequest{Path: path}, res, nil)
 	return res.Acl, &res.Stat, err
 }
+
 func (c *Conn) SetACL(path string, acl []ACL, version int32) (*Stat, error) {
 	if err := validatePath(path, false); err != nil {
 		return nil, err

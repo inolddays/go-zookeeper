@@ -1,19 +1,18 @@
 language: go
 go:
-  - 1.11
-  - 1.9
+  - '1.9'
+  - '1.10'
+  - '1.11'
+  - '1.12'
+  - '1.13'
   - tip
 
-go_import_path: github.com/samuel/go-zookeeper
+go_import_path: github.com/z-division/go-zookeeper
 
 jdk:
   - oraclejdk9
 
 sudo: false
-
-branches:
-  only:
-    - master
 
 before_install:
   - make setup ZK_VERSION=${zk_version}

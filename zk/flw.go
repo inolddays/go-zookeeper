@@ -41,7 +41,6 @@ func FLWSrvr(servers []string, timeout time.Duration) ([]*ServerStats, bool) {
 
 	for i := range ss {
 		response, err := fourLetterWord(servers[i], "srvr", timeout)
-
 		if err != nil {
 			ss[i] = &ServerStats{Error: err}
 			imOk = false
@@ -73,7 +72,6 @@ func FLWSrvr(servers []string, timeout time.Duration) ([]*ServerStats, bool) {
 		}
 
 		buildTime, err := time.Parse("01/02/2006 15:04 MST", match[1])
-
 		if err != nil {
 			ss[i] = &ServerStats{Error: err}
 			imOk = false
@@ -81,7 +79,6 @@ func FLWSrvr(servers []string, timeout time.Duration) ([]*ServerStats, bool) {
 		}
 
 		parsedInt, err := strconv.ParseInt(match[9], 0, 64)
-
 		if err != nil {
 			ss[i] = &ServerStats{Error: err}
 			imOk = false
@@ -133,7 +130,6 @@ func FLWRuok(servers []string, timeout time.Duration) []bool {
 
 	for i := range oks {
 		response, err := fourLetterWord(servers[i], "ruok", timeout)
-
 		if err != nil {
 			continue
 		}
@@ -168,7 +164,6 @@ func FLWCons(servers []string, timeout time.Duration) ([]*ServerClients, bool) {
 
 	for i := range sc {
 		response, err := fourLetterWord(servers[i], "cons", timeout)
-
 		if err != nil {
 			sc[i] = &ServerClients{Error: err}
 			imOk = false
