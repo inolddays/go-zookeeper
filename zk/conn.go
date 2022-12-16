@@ -35,7 +35,7 @@ var ErrInvalidPath = errors.New("zk: invalid path")
 var DefaultLogger Logger = defaultLogger{}
 
 const (
-	bufferSize      = 1536 * 1024
+	bufferSize      = 1536 * 1024 * 2
 	eventChanSize   = 6
 	sendChanSize    = 16
 	protectedPrefix = "_c_"
@@ -180,7 +180,8 @@ func ConnectWithDialer(servers []string, sessionTimeout time.Duration, dialer Di
 // server and keep the same session. This is means any ephemeral nodes and
 // watches are maintained.
 func Connect(servers []string, sessionTimeout time.Duration, options ...connOption) (*Conn, <-chan Event, error) {
-	if len(servers) == 0 {
+	fmt.Println("test in")
+        if len(servers) == 0 {
 		return nil, nil, errors.New("zk: server list must not be empty")
 	}
 
